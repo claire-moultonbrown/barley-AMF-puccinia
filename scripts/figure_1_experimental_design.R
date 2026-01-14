@@ -6,13 +6,9 @@
 #script only included for completeness
 
 # ==============================
-# Clear environment
+# Setup
 # ==============================
 rm(list = ls())
-
-# ==============================
-# Define directories
-# ==============================
 dir_figures   <- "figures"
 
 # ==============================
@@ -24,7 +20,8 @@ library(cowplot)
 # ==============================
 # Fig 1: Experimental design image
 # ==============================
-exp_design_pic <- file.path(dir_figures, "fig1_experimental_plan_fig.png")
+exp_design_pic <- file.path(dir_figures,
+                            "fig1_experimental_plan_fig.png")
 
 fig1 <- ggdraw() +
   draw_image(exp_design_pic, scale = 1)
