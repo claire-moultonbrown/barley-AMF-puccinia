@@ -1,0 +1,13 @@
+Treatment,Replicate,ubiquitin/actin,Treatment_initial,AMF,Puccinia
+Control,1,2.014388,C,AM-,P-
+Control,2,2.972399,C,AM-,P-
+Control,3,2.588454,C,AM-,P-
+Puccinia,1,3.686007,P,AM-,P+
+Puccinia,2,7.412791,P,AM-,P+
+Puccinia,3,7.61236,P,AM-,P+
+AMF,1,1.43131,A,AM+,P-
+AMF,2,1.922747,A,AM+,P-
+AMF,3,2.149712,A,AM+,P-
+Both,1,3.764535,AP,AM+,P+
+Both,2,3.512605,AP,AM+,P+
+Both,3,6.938776,AP,AM+,P+
