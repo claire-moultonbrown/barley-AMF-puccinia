@@ -274,8 +274,8 @@ figS1_labelled <- ggdraw() +
   draw_plot_label(
     label = c("(A)", "(B)", "(C)"),
     size  = 20,
-    x     = c(0.03, 0.36, 0.69),
-    y     = c(0.86, 0.86, 0.86)
+    x     = c(0.06, 0.37, 0.68),
+    y     = c(0.99, 0.99, 0.99)
   )
 
 figS1_labelled
@@ -287,7 +287,7 @@ ggsave(
   filename = file.path(dir_figures, "Figure_S1_biomass_panels.png"),
   plot     = figS1_labelled,
   width    = 30,
-  height   = 15,
+  height   = 10,
   units    = "cm",
   dpi      = 300,
   bg       = "white"
