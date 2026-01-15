@@ -15,7 +15,9 @@ Contents:
   - figure_4_transcriptomics.R
   - figure_5_wrkys_and_cdpks.R
   - figure_6_ubiquitination.R
+  - figure_s1_plant_biomass_allocation.R
 - data_raw
+  - meta_data.csv
   - fig2_endpoint_measurements.csv
   - fig3_qpcr_defence_genes.csv
   - fig4a_transcriptomics_volcano.csv
