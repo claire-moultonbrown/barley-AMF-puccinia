@@ -1,25 +1,25 @@
-Source,Cluster,GO term,pvalue,number
-GO_BP, C2,ribosome biogenesis,1.84E-28,64
-GO_BP, C2,macromolecule methylation,4.23E-09,24
-GO_BP, C2,chloroplast organization,5.33E-05,21
-GO_BP, C2,pseudouridine synthesis,0.000260247,11
-GO_BP, C2,tRNA aminoacylation,0.00766496,16
-GO_BP, C2,response to radiation,0.036136932,28
-GO_BP, C1,protein phosphorylation,2.34E-21,141
-GO_BP, C2,oxoacid metabolic process,1.85E-07,58
-GO_BP, C3,cinnamic acid biosynthetic process,0.033608866,4
-GO_BP, C5,glutathione metabolic process,3.56E-05,12
-GO_BP, C5,response to wounding,0.004603644,8
-GO_BP, C5,carbohydrate metabolic process,0.006939252,35
-GO_BP, C5,response to biotic stimulus,0.015348122,22
-GO_BP, C5,defense response,0.030727877,31
-GO_BP, C3,photosynthesis,1.95E-11,30
-GO_BP, C3,chloroplast RNA processing,0.000668514,6
-GO_BP, C3,carbohydrate metabolic process,0.000714872,58
-GO_BP, C3,plastid organization,0.001388026,14
-GO_BP, C3,chloroplast RNA processing,0.003355055,5
-GO_BP, C3,lignin catabolic process,0.039096754,6
-GO_BP, C6,protein phosphorylation,2.59E-06,76
-GO_BP, C6,response to other organisms,0.000184697,15
-GO_BP, C7,protein phosphorylation,4.52E-08,58
-GO_BP, C4,small molecule metabolic process,0.035205057,18
+Source,Cluster,GO_term,pvalue,number
+GO_BP,C1,ribosome biogenesis,1.84E-28,64
+GO_BP,C1,macromolecule methylation,4.23E-09,24
+GO_BP,C1,chloroplast organization,5.33E-05,21
+GO_BP,C1,pseudouridine synthesis,0.000260247,11
+GO_BP,C1,tRNA aminoacylation,0.00766496,16
+GO_BP,C1,response to radiation,0.036136932,28
+GO_BP,C2,protein phosphorylation,2.34E-21,141
+GO_BP,C2,oxoacid metabolic process,1.85E-07,58
+GO_BP,C2,cinnamic acid biosynthetic process,0.033608866,4
+GO_BP,C3,glutathione metabolic process,3.56E-05,12
+GO_BP,C3,response to wounding,0.004603644,8
+GO_BP,C3,carbohydrate metabolic process,0.006939252,35
+GO_BP,C3,response to biotic stimulus,0.015348122,22
+GO_BP,C3,defense response,0.030727877,31
+GO_BP,C4,photosynthesis,1.95E-11,30
+GO_BP,C4,chloroplast RNA processing,0.000668514,6
+GO_BP,C4,carbohydrate metabolic process,0.000714872,58
+GO_BP,C4,plastid organization,0.001388026,14
+GO_BP,C4,chloroplast RNA processing,0.003355055,5
+GO_BP,C4,lignin catabolic process,0.039096754,6
+GO_BP,C5,protein phosphorylation,2.59E-06,76
+GO_BP,C5,response to other organisms,0.000184697,15
+GO_BP,C6,protein phosphorylation,4.52E-08,58
+GO_BP,C7,small molecule metabolic process,0.035205057,18
