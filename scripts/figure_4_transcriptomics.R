@@ -18,16 +18,13 @@ dir.create(dir_figures,   showWarnings = FALSE, recursive = TRUE)
 # ==============================
 # Load libraries
 # ==============================
-# Data handling and plotting (ggplot-based figures)
 library(tidyverse)
-
-# Multi-panel figure assembly
 library(cowplot)
 
-# Heatmap (ComplexHeatmap-based)
-library(ComplexHeatmap)
-library(circlize)   # for colorRamp2()
-library(grid)       # for gpar(), unit()
+# Heatmap (pheatmap-based, as per your template)
+library(RColorBrewer)
+library(pheatmap)
+library(dendextend)
 
 # ==============================
 # Read and format data
@@ -35,7 +32,6 @@ library(grid)       # for gpar(), unit()
 volcano     <- read.csv(file.path(dir_raw, "fig4a_transcriptomics_volcano.csv"))
 amf_induced <- read.csv(file.path(dir_raw, "fig4b_transcriptomics_amf_induced_go_terms.csv"))
 degs        <- read.csv(file.path(dir_raw, "fig4c_transcriptomics_expression_by_treatment.csv"))
-anno        <- read.csv(file.path(dir_raw, "fig4c_transcriptomics_cluster_annotation.csv"))
 clusters    <- read.csv(file.path(dir_raw, "fig4d_transcriptomics_enriched_cluster_go_terms.csv"))
 
 cols <- c("Regulation", "term_name")
@@ -46,7 +42,6 @@ clusters$Cluster <- as.factor(clusters$Cluster)
 # ==============================
 # Plot parameters
 # ==============================
-
 theme_claire <- theme(
   panel.background = element_rect(fill = NA),
   legend.title     = element_blank(),
@@ -85,11 +80,18 @@ make_bubble <- function(df, y_col, size_col, colour_col, facet_formula, colour_n
     theme_bw() + theme_obj
 }
 
+get_pheatmap_tree_row <- function(ph_obj) {
+  # pheatmap return type varies by version / context; handle list + S4
+  if (!is.null(tryCatch(ph_obj$tree_row, error = function(e) NULL))) return(ph_obj$tree_row)
+  if (!is.null(tryCatch(ph_obj[["tree_row"]], error = function(e) NULL))) return(ph_obj[["tree_row"]])
+  if (methods::is(ph_obj, "pheatmap") && !is.null(tryCatch(ph_obj@tree_row, error = function(e) NULL))) return(ph_obj@tree_row)
+  stop("Could not extract tree_row from pheatmap object (unexpected pheatmap return type).")
+}
+
+
 # ==============================
 # Figure 4A volcano plot
 # ==============================
-
-# thresholds
 fc_thr <- 2
 p_thr  <- 0.05
 
@@ -99,13 +101,13 @@ volcano2 <- volcano %>%
     status = case_when(
       pvalue < p_thr & logFC >=  fc_thr ~ "Up",
       pvalue < p_thr & logFC <= -fc_thr ~ "Down",
-      TRUE                            ~ "NS"
-    ))
+      TRUE                             ~ "NS"
+    )
+  )
 
 fig4A <- ggplot(volcano2, aes(x = logFC, y = log2p)) +
   geom_point(aes(colour = status), alpha = 0.5, size = 1) +
-  scale_colour_manual(
-    values = c("Up" = "red", "Down" = "blue", "NS" = "grey70")) +
+  scale_colour_manual(values = c("Up" = "red", "Down" = "blue", "NS" = "grey70")) +
   labs(
     x = bquote(log[2]*"FC"),
     y = bquote(log[2]*"p-value"),
@@ -118,12 +120,10 @@ fig4A
 # ==============================
 # Figure 4B bubble plot of AMF induced GO terms
 # ==============================
-
 amf_induced2 <- amf_induced %>%
   mutate(
     neglog10padj = -log10(padj),
-    Regulation = factor(Regulation,
-      levels = c("Upregulated with AMF", "Downregulated with AMF"))
+    Regulation = factor(Regulation, levels = c("Upregulated with AMF", "Downregulated with AMF"))
   )
 
 fig4B <- make_bubble(
@@ -134,17 +134,16 @@ fig4B <- make_bubble(
   facet_formula = Regulation ~ .,
   colour_name   = "-log10(adj p-value)",
   size_name     = "Count",
-  theme_obj     = theme_bubble + 
-    theme(strip.text = element_text(angle = 270))
+  theme_obj     = theme_bubble + theme(strip.text = element_text(angle = 270))
 )
 fig4B
 
 # ==============================
-# Figure 4C heatmap of DEGs
+# Figure 4C heatmap of DEGs (pheatmap method)
 # ==============================
 
 # ------------------------------
-# tidy
+# Build matrix (C/A/P/AP)
 # ------------------------------
 mat <- degs %>%
   dplyr::select(Gene.ID, C, A, P, AP) %>%
@@ -153,135 +152,135 @@ mat <- degs %>%
   column_to_rownames("Gene.ID") %>%
   as.matrix()
 
-# Force column order C A P AP
 mat <- mat[, c("C", "A", "P", "AP"), drop = FALSE]
 
-row_anno <- anno %>%
-  dplyr::select(Gene.ID, Cluster) %>%
-  distinct(Gene.ID, .keep_all = TRUE) %>%
-  mutate(
-    Cluster = ifelse(is.na(Cluster) | Cluster == "", "Unknown", Cluster),
-    Cluster = factor(Cluster)
-  ) %>%
-  column_to_rownames("Gene.ID")
+# ------------------------------
+# pheatmap settings to match your template
+# ------------------------------
+labels_col <- c("C", "A", "P", "AP")
 
-# Match and fill any missing rows
-row_anno <- row_anno[rownames(mat), , drop = FALSE]
-row_anno$Cluster <- addNA(row_anno$Cluster); levels(row_anno$Cluster)[is.na(levels(row_anno$Cluster))] <- "Unknown"
+hm_cols   <- rev(brewer.pal(n = 9, name = "RdBu"))
+hm_breaks <- c(-2, -1.5, -1, -0.5, -0.1, 0.1, 0.5, 1, 1.5, 2)
+
+# Cluster colours (7 clusters, like your earlier approach)
+ann_colors <- list(
+  Cluster = c(
+    "C1" = "#CE3D32FF",
+    "C2" = "#FF14FF",
+    "C3" = "#749B58FF",
+    "C4" = "#466983FF",
+    "C5" = "#BA6338FF",
+    "C6" = "#5DB1DDFF",
+    "C7" = "#8022FF"
+  )
+)
 
 # ------------------------------
-# Transform + row scaling
+# Draw heatmap (saved to file)
 # ------------------------------
-mat_log <- log2(mat + 1)
-mat_scaled <- t(scale(t(mat_log)))
-mat_scaled[is.nan(mat_scaled)] <- NA
+heatmap_png <- file.path(dir_figures, "fig4c_heatmap.png")
 
-# Optional: drop rows that became all NA after scaling
-keep <- rowSums(is.finite(mat_scaled)) > 0
-mat_scaled <- mat_scaled[keep, , drop = FALSE]
+# Note:
+# - scale = "row" gives row z-scores (as in your template)
+# - clustering_method = "ward.D2" matches your template and your previous ComplexHeatmap choice
+# - cutree_rows = 7 splits dendrogram into 7 clusters (exported below)
+# - annotation_row uses clusters derived from the pheatmap tree (so no annotation file needed)
+
+# We generate the heatmap first WITHOUT annotation_row, extract clusters, then redraw with annotation.
+tmp_hm <- pheatmap::pheatmap(
+  mat,
+  color                    = hm_cols,
+  breaks                   = hm_breaks,
+  scale                    = "row",
+  cluster_rows             = TRUE,
+  clustering_distance_rows = "euclidean",
+  clustering_method        = "ward.D2",
+  cluster_cols             = FALSE,
+  show_rownames            = FALSE,
+  show_colnames            = TRUE,
+  labels_col               = labels_col,
+  fontsize                 = 12,
+  fontsize_col             = 12,
+  cellwidth                = 50,
+  border_color             = NA,
+  legend                   = TRUE,
+  annotation_names_col     = FALSE
+)
 
 # ------------------------------
-# Row clustering + cut into 7 clusters
+# Extract clusters from dendrogram + save
 # ------------------------------
 k_clusters <- 7
-row_hc <- hclust(dist(mat_scaled), method = "complete")
-cl <- cutree(row_hc, k = k_clusters)
+row_tree <- get_pheatmap_tree_row(tmp_hm)
+tree_k <- sort(cutree(row_tree, k = k_clusters))
 
 cluster_df <- tibble(
-  Gene.ID = names(cl),
-  Cluster = paste0("c", cl)
+  Gene.ID = names(tree_k),
+  Cluster = paste0("C", as.integer(tree_k))
 ) %>%
-  arrange(as.integer(sub("^c", "", Cluster)), Gene.ID)
+  arrange(as.integer(sub("^C", "", Cluster)), Gene.ID)
 
-write_csv(cluster_df, 'data_processed/degs_7clusters_assignments.csv')
+write_csv(cluster_df, file.path(dir_processed, "fig4c_deg_clusters_cutree_k7.csv"))
 
-# ------------------------------
-# Heatmap colours
-# ------------------------------
-col_fun <- colorRamp2(
-  c(-2, 0, 2),
-  c("#2166AC", "white", "#D73027")
-)
+# Build row annotation from the clustering (no external annotation file)
+row_anno <- cluster_df %>%
+  column_to_rownames("Gene.ID")
 
-cluster_cols <- c(
-  "Cluster 1"      = "#1B9E77",
-  "Cluster 2"      = "#D95F02",
-  "Cluster 3"      = "#7570B3",
-  "Cluster 4"      = "#E7298A",
-  "Cluster 5"      = "#66A61E",
-  "Cluster 6"      = "#E6AB02",
-  "Cluster 7"      = "#A6CEE3"
-)
+# Ensure row order matches matrix rows
+row_anno <- row_anno[rownames(mat), , drop = FALSE]
 
 # ------------------------------
-# Row annotation for cluster
+# Redraw heatmap with row annotation and save to PNG
 # ------------------------------
-
-ha <- rowAnnotation(
-  df = row_anno,
-  col = list(Cluster = cluster_cols),
-  annotation_name_side = "bottom",
-  annotation_name_gp = gpar(fontface = "bold", fontsize = 14),
-  annotation_legend_param = list(
-    Cluster = list(
-      title_gp  = gpar(fontsize = 18, fontface = "bold"),
-      labels_gp = gpar(fontsize = 16)
-    )
-  )
-)
-
-# ------------------------------
-# Heatmap with dendrogram + visible gaps between 7 clusters
-# ------------------------------
-ht <- Heatmap(
-  mat_scaled,
-  name = "Row z-score\nlog2(expr + 1)",
-  col = col_fun,
-  cluster_rows = row_hc,
-  cluster_columns = FALSE,
-  row_split = k_clusters,
-  row_gap = unit(2, "mm"),
-  row_title = NULL,
-  left_annotation = ha,
-  show_row_names = FALSE,
-  rect_gp = gpar(col = NA),
-  column_names_gp = gpar(fontsize = 18, fontface = "bold"),
-  column_names_rot = 0,
-  heatmap_legend_param = list(
-    title_gp   = gpar(fontsize = 18, fontface = "bold"),
-    labels_gp  = gpar(fontsize = 16),
-    legend_gap = unit(8, "mm")
-  )
-)
-
-# Render heatmap to a temporary PNG
+# Render heatmap to a PNG (pheatmap draws directly to the active device)
 heatmap_png <- file.path(dir_figures, "fig4c_heatmap.png")
 
 png(heatmap_png, width = 2200, height = 2600, res = 300)
-ComplexHeatmap::draw(ht, heatmap_legend_side = "right", annotation_legend_side = "right")
+
+pheatmap(
+  mat,
+  color                    = hm_cols,
+  breaks                   = hm_breaks,
+  scale                    = "row",
+  cluster_rows             = TRUE,
+  clustering_distance_rows = "euclidean",
+  clustering_method        = "ward.D2",
+  cluster_cols             = FALSE,
+  show_rownames            = FALSE,
+  show_colnames            = TRUE,
+  labels_col               = labels_col,
+  fontsize                 = 12,
+  fontsize_col             = 12,
+  cellwidth                = 50,
+  border_color             = NA,
+  legend                   = TRUE,
+  annotation_row           = row_anno,
+  annotation_names_row     = FALSE,
+  annotation_colors        = ann_colors
+)
+
 dev.off()
 
 # Bring heatmap back in as an image panel for cowplot
 fig4C <- ggdraw() + draw_image(heatmap_png, scale = 1)
 fig4C
 
-
 # ==============================
 # Figure 4D bubble plot of clustered DEG GO terms
 # ==============================
-
 clusters2 <- clusters %>%
   mutate(neglog10padj = -log10(pvalue))
 
 fig4D <- make_bubble(
   clusters2,
-  y_col         = "GO.term",
+  y_col         = "GO_term",
   size_col      = "number",
   colour_col    = "neglog10padj",
   facet_formula = ~ Cluster,
   colour_name   = "-log10(adj p-value)",
   size_name     = "Count",
-  theme_obj     = theme_bubble)
+  theme_obj     = theme_bubble
+)
 fig4D
 
 # ==============================
@@ -290,13 +289,13 @@ fig4D
 fig4_multiplot <- ggdraw() +
   draw_plot(fig4A, x = 0.05, y = 0.70, width = 0.27, height = 0.30) +
   draw_plot(fig4B, x = 0.50, y = 0.50, width = 0.48, height = 0.48) +
-  draw_plot(fig4C, x = 0.00, y = 0.00, width = 0.40, height = 0.70) +
+  draw_plot(fig4C, x = 0.00, y = 0.00, width = 0.44, height = 0.70) +
   draw_plot(fig4D, x = 0.40, y = 0.00, width = 0.60, height = 0.48) +
   draw_plot_label(
     label = c("(A)", "(B)", "(C)", "(D)"),
     size  = 16,
     x     = c(0, 0.4, 0, 0.4),
-    y     = c(1, 1, 0.77, 0.5 )
+    y     = c(1, 1, 0.7, 0.5)
   )
 fig4_multiplot
 
