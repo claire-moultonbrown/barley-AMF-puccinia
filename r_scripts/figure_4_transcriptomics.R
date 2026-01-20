@@ -92,7 +92,8 @@ get_pheatmap_tree_row <- function(ph_obj) {
 # ==============================
 # Figure 4A volcano plot
 # ==============================
-fc_thr <- 2
+#log2 fold change >1 so fc > 2
+fc_thr <- 1
 p_thr  <- 0.05
 
 volcano2 <- volcano %>%
