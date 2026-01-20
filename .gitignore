@@ -1,0 +1,28 @@
+# Raw/processed sequencing data
+fastq_raw/
+fastq_clean/
+qc/
+alignments/
+genome/hisat2_index/
+
+# Large reference sequence files (optional - if you don't want them tracked)
+genome/*.fa
+genome/*.fasta
+genome/*.fna
+genome/*.gff
+genome/*.gtf
+
+# Results that can be regenerated (choose what you prefer to commit)
+results/tmp/
+*.sam
+*.bam
+*.bai
+*.log
+
+# R session cruft
+.Rhistory
+.RData
+.Rproj.user/
+
+# OS
+.DS_Store
