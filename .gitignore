@@ -1,3 +1,6 @@
+# Raw RNA-seq data are deposited at NCBI SRA (PRJNA1328502)
+fastq_raw/
+
 # Raw/processed sequencing data
 fastq_raw/
 fastq_clean/
