@@ -80,3 +80,9 @@ You will need the following software available on your system (via modules, cond
   - tidyverse
   - gprofiler2
 
+# Data availability
+
+Raw RNA-sequencing data generated in this study are publicly available from the NCBI Sequence Read Archive (SRA) under BioProject accession **PRJNA1328502** (https://www.ncbi.nlm.nih.gov/sra/?term=PRJNA1328502). 
+
+Processed count data and analysis scripts are provided in this repository.
+
