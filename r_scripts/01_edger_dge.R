@@ -1,4 +1,8 @@
-#!/usr/bin/env Rscript
+##############################################################################
+
+# 01_edger_dge
+
+##############################################################################
 
 suppressPackageStartupMessages({
   library(edgeR)
@@ -7,7 +11,7 @@ suppressPackageStartupMessages({
 
 proj <- "/path/to/project"
 count_dir <- file.path(proj, "counts", "all_counts")
-meta <- read_csv(file.path(proj, "metadata.csv"))
+meta <- read_csv("data_raw/metadata.csv"))
 
 # Read HTSeq count tables, keep gene counts, drop HTSeq summary rows
 read_htseq <- function(f) {
